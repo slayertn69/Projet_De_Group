@@ -1,47 +1,65 @@
+// src/features/authSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import MyAxios from '../MyAxios'; 
 
+// Simuler une fonction d'authentification (API fictive)
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (userCredentials, thunkAPI) => {
     const { username, password } = userCredentials;
-    try {
-      const response = await MyAxios.post('/login', { username, password });
-      return response.data; 
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data); 
+    
+    const response = await fetch('http://localhost:3005/api/users/login', { // Remplace cette URL par l'API réelle de connexion
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      return data; // Retourne les données utilisateur
+    } else {
+      return thunkAPI.rejectWithValue(data); // Retourne l'erreur si la connexion échoue
     }
   }
 );
 
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
-  async (userDetails, thunkAPI) => {
-    const { username, password, email } = userDetails;
-    try {
-      const response = await MyAxios.post('/register', { username, password, email });
-      return response.data; 
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data); 
+  async (userCredentials, thunkAPI) => {
+    const { username, password } = userCredentials;
+
+    const response = await fetch('http://localhost:3005/api/users/register', { // Remplace cette URL par l'API réelle d'enregistrement
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      return data; // Retourne les données utilisateur après l'enregistrement
+    } else {
+      return thunkAPI.rejectWithValue(data); // Retourne l'erreur si l'enregistrement échoue
     }
   }
 );
 
-
+// Création du slice pour gérer l'authentification
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
-    user: null,
-    token: null,
-    status: 'idle',
-    error: null,
+    user: null, // Informations de l'utilisateur
+    token: null, // Jeton d'authentification (si nécessaire)
+    status: 'idle', // idle | loading | succeeded | failed
+    error: null, // Stocke les erreurs potentielles
   },
   reducers: {
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.status = 'idle';
-      localStorage.removeItem('token'); 
     },
   },
   extraReducers: (builder) => {
@@ -51,9 +69,8 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        localStorage.setItem('token', action.payload.token); 
+        state.user = action.payload.user; // Assurez-vous que l'API renvoie `user`
+        state.token = action.payload.token; // Si l'API renvoie un jeton
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = 'failed';
@@ -64,9 +81,8 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        localStorage.setItem('token', action.payload.token); 
+        state.user = action.payload.user; // Assurez-vous que l'API renvoie `user`
+        state.token = action.payload.token; // Si l'API renvoie un jeton
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.status = 'failed';

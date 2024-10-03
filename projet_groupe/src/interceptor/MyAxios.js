@@ -2,11 +2,11 @@ import axios from 'axios';
 import { store } from '../redux/store';
 import { logout } from '../redux/authSlice';
 
-const MyAxios = axios.create({
+const axiosInstance = axios.create({
     baseURL: 'http://localhost:3005', // URL du backend local
 });
 
-MyAxios.interceptors.request.use(
+axiosInstance.interceptors.request.use(
     (config) => {
         const state = store.getState();
         const token = state.auth.token;
@@ -22,7 +22,7 @@ MyAxios.interceptors.request.use(
     }
 );
 
-MyAxios.interceptors.response.use(
+axiosInstance.interceptors.response.use(
     (response) => {
 
         return response;
@@ -43,4 +43,4 @@ MyAxios.interceptors.response.use(
     }
 );
 
-export default MyAxios;
+export default axiosInstance;
